@@ -1,5 +1,6 @@
 import csv
 import streamlit as st
+from st_copy_to_clipboard import st_copy_to_clipboard
 
 # --------------------------------------------------
 # Page Setup
@@ -56,7 +57,10 @@ if uploaded_file is not None:
         player_name = row[3].strip() if len(row) >= 4 else ""
 
         # Create entry
-        entry = f"{player_name} T{ticket_number}".strip()
+        if ticket_number:
+            entry = f"{player_name} T{ticket_number}"
+        else:
+            entry = player_name
 
         if auto_renew:
 
@@ -93,25 +97,37 @@ if uploaded_file is not None:
         for i in range(1, num_offline + 1):
             draw_entries.append(f"Offline Entry {i}")
 
-        draw_list = "\n".join(draw_entries)
+        st.session_state["draw_list"] = "\n".join(draw_entries)
+        st.session_state["entry_count"] = len(draw_entries)
 
-        st.success(
-            f"Draw list generated successfully ({len(draw_entries)} entries)"
-        )
+# --------------------------------------------------
+# Display Results
+# --------------------------------------------------
 
-        st.text_area(
-            "Draw List",
-            draw_list,
-            height=350
-        )
+if "draw_list" in st.session_state:
 
-        st.download_button(
-            label="📥 Download Draw List",
-            data=draw_list,
-            file_name="draw_list.txt",
-            mime="text/plain"
-        )
+    st.success(
+        f"Draw list generated successfully ({st.session_state['entry_count']} entries)"
+    )
 
-        st.info(
-            f"Total Entries: {len(draw_entries)}"
-        )
+    st.text_area(
+        "Draw List",
+        st.session_state["draw_list"],
+        height=350
+    )
+
+    st_copy_to_clipboard(
+        st.session_state["draw_list"],
+        "📋 Copy Names to Clipboard"
+    )
+
+    st.download_button(
+        label="📥 Download Draw List",
+        data=st.session_state["draw_list"],
+        file_name="draw_list.txt",
+        mime="text/plain"
+    )
+
+    st.info(
+        f"Total Entries: {st.session_state['entry_count']}"
+    )
