@@ -38,7 +38,7 @@ auto_renew = st.checkbox(
 
 if uploaded_file is not None:
 
-    column_d_values = []
+    draw_entries = []
 
     reader = csv.reader(
         uploaded_file.getvalue().decode("utf-8-sig").splitlines()
@@ -49,17 +49,25 @@ if uploaded_file is not None:
 
     for row in reader:
 
-        col_d = row[3] if len(row) >= 4 else ""
+        # Column C = Ticket Number
+        ticket_number = row[2].strip() if len(row) >= 3 else ""
+
+        # Column D = Player Name
+        player_name = row[3].strip() if len(row) >= 4 else ""
+
+        # Create entry
+        entry = f"{player_name} T{ticket_number}".strip()
 
         if auto_renew:
 
-            col_h = row[7] if len(row) >= 8 else ""
+            # Column H = Auto Renew Status
+            col_h = row[7].strip() if len(row) >= 8 else ""
 
-            if col_h.strip().lower() == "enabled":
-                column_d_values.append(col_d)
+            if col_h.lower() == "enabled":
+                draw_entries.append(entry)
 
         else:
-            column_d_values.append(col_d)
+            draw_entries.append(entry)
 
     # --------------------------------------------------
     # Offline Entries
@@ -83,12 +91,12 @@ if uploaded_file is not None:
     if st.button("Generate Draw List"):
 
         for i in range(1, num_offline + 1):
-            column_d_values.append(f"offline entry {i}")
+            draw_entries.append(f"Offline Entry {i}")
 
-        draw_list = "\n".join(column_d_values)
+        draw_list = "\n".join(draw_entries)
 
         st.success(
-            f"Draw list generated successfully ({len(column_d_values)} entries)"
+            f"Draw list generated successfully ({len(draw_entries)} entries)"
         )
 
         st.text_area(
@@ -102,4 +110,8 @@ if uploaded_file is not None:
             data=draw_list,
             file_name="draw_list.txt",
             mime="text/plain"
+        )
+
+        st.info(
+            f"Total Entries: {len(draw_entries)}"
         )
