@@ -2,10 +2,15 @@ import csv
 import pandas as pd
 import streamlit as st
 from st_copy_to_clipboard import st_copy_to_clipboard
+from datetime import datetime
+from google.oauth2.service_account import Credentials
+import gspread
 
 # --------------------------------------------------
 # Page Setup
 # --------------------------------------------------
+
+SHEET_ID = "1umG0zNs4Uz9IqfZXPXEeAgfSWoRTzDDsEwlSRC-3PnM"
 
 st.set_page_config(
     page_title="50-50 Draw Manager",
@@ -14,6 +19,33 @@ st.set_page_config(
 )
 
 st.title("🎯 50-50 Draw Manager")
+
+# --------------------------------------------------
+# 50-50 google sheet
+# --------------------------------------------------
+
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+@st.cache_resource
+def get_client():
+
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scope
+    )
+
+    return gspread.authorize(creds)
+
+client = get_client()
+
+fifty_sheet = client.open_by_key(
+    SHEET_ID
+).worksheet("50-50")
+
+name_col = "Player's name"
 
 # --------------------------------------------------
 # CSS Styles
@@ -234,11 +266,13 @@ with tab2:
         st.divider()
 
         # ------------------------------------------
-        # Search by Player Name
+        # Winner Payment Submission
         # ------------------------------------------
 
+        st.subheader("🏆 Submit Winner for Payment")
+
         search_name = st.text_input(
-            "Search by Player Name"
+            "Search Winner Name"
         )
 
         if search_name:
@@ -253,17 +287,72 @@ with tab2:
                 )
             ]
 
-            st.subheader("Name Search Results")
-
             if len(results):
+
                 st.dataframe(
                     results,
                     use_container_width=True
                 )
+
+                winner_options = [
+                    f"{row[name_col]} | {row[ticket_col]}"
+                    for _, row in results.iterrows()
+                ]
+
+                selected_winner = st.selectbox(
+                    "Select Winning Entry",
+                    winner_options
+                )
+
+                selected_index = winner_options.index(selected_winner)
+
+                selected_row = results.iloc[selected_index]
+
+                phone_number = str(
+                    selected_row["Player's phone number"]
+                ).strip()
+
+                phone_number = phone_number.replace("+", "")
+
+                if phone_number.startswith("353"):
+                    phone_number = "0" + phone_number[3:]
+                    
+                winner_name = selected_row["Player's name"]
+                st.write(f"**Winner:** {winner_name}")
+                st.write(f"**Phone:** {phone_number}")
+                st.write(f"**Ticket:** {selected_row[ticket_col]}")
+
+                jackpot_amount = st.number_input(
+                    "Jackpot Amount (€)",
+                    min_value=0.0,
+                    step=10.0
+                )
+
+                if st.button(
+                    "✅ Send Winner For Payment",
+                    type="primary"
+                ):
+
+                    fifty_sheet.append_row([
+                        datetime.now().strftime("%d/%m/%Y"),
+                        selected_row["Player's name"],
+                        phone_number,
+                        str(selected_row[ticket_col]),
+                        jackpot_amount,
+                        "Pending"
+                    ])
+
+                    st.success(
+                        "Winner sent to Treasurer successfully."
+                    )
+
             else:
-                st.warning("No matching player found.")
+                st.warning(
+                    "No matching player found."
+                )
 
         st.divider()
+                
 
         # ------------------------------------------
         # Search by Ticket Number
