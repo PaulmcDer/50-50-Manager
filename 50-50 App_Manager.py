@@ -38,11 +38,6 @@ st.markdown("""
     background-color: #d4af37;
 }
 
-/* Main page background */
-.stApp {
-    background-color: #fff9e6;
-}
-
 /* Make tabs slightly darker */
 .stTabs [data-baseweb="tab"] {
     color: #2c3e50 !important;
