@@ -21,34 +21,19 @@ st.title("🎯 50-50 Draw Manager")
 st.markdown("""
 <style>
 
-/* Tabs */
-.stTabs [data-baseweb="tab"] {
-    color: #374151 !important;
-    font-weight: 600;
+/* Bold tab text */
+button[data-baseweb="tab"] p {
+    font-weight: 700 !important;
 }
 
-/* Selected tab */
-.stTabs [aria-selected="true"] {
-    color: #1f2937 !important;
-    font-weight: 700;
+/* Remove custom yellow backgrounds */
+.stTextInput input,
+.stSelectbox div,
+.stTextArea textarea {
+    background-color: inherit !important;
+    color: inherit !important;
 }
 
-/* Optional gold underline */
-.stTabs [aria-selected="true"]::after {
-    background-color: #d4af37;
-}
-
-/* Make tabs slightly darker */
-.stTabs [data-baseweb="tab"] {
-    color: #2c3e50 !important;
-    font-weight: 600;
-}
-/* All alert boxes */
-div[data-testid="stAlert"] {
-    background-color: #f8f8f8 !important;
-    border-radius: 10px;
-    border: 1px solid #dddddd !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
