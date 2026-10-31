@@ -271,21 +271,45 @@ with tab2:
 
         st.subheader("🏆 Submit Winner for Payment")
 
-        search_name = st.text_input(
-            "Search Winner Name"
+        search_type = st.radio(
+            "Search By",
+            ["Name", "Ticket Number"],
+            horizontal=True
         )
 
-        if search_name:
+        search_value = st.text_input(
+            f"Search by {search_type}"
+        )
 
-            results = lookup_df[
-                lookup_df["Player's name"]
-                .astype(str)
-                .str.contains(
-                    search_name,
-                    case=False,
-                    na=False
-                )
-            ]
+        selected_row = None
+
+        if search_value:
+
+            if search_type == "Name":
+
+                results = lookup_df[
+                    lookup_df["Player's name"]
+                    .astype(str)
+                    .str.strip()
+                    .str.lower()
+                    .str.contains(
+                        search_value.strip().lower(),
+                        regex=False,
+                        na=False
+                    )
+                ]
+
+            else:
+
+                results = lookup_df[
+                    lookup_df[ticket_col]
+                    .astype(str)
+                    .str.contains(
+                        search_value.strip(),
+                        regex=False,
+                        na=False
+                    )
+                ]
 
             if len(results):
 
@@ -294,44 +318,72 @@ with tab2:
                     use_container_width=True
                 )
 
-                winner_options = [
-                    f"{row[name_col]} | {row[ticket_col]}"
-                    for _, row in results.iterrows()
-                ]
+                # Multiple matches
+                if len(results) > 1:
 
-                selected_winner = st.selectbox(
-                    "Select Winning Entry",
-                    winner_options
-                )
+                    winner_options = [
+                        f"{row[name_col]} | {row[ticket_col]}"
+                        for _, row in results.iterrows()
+                    ]
 
-                selected_index = winner_options.index(selected_winner)
+                    selected_winner = st.selectbox(
+                        "Select Winning Entry",
+                        winner_options
+                    )
 
-                selected_row = results.iloc[selected_index]
+                    selected_index = winner_options.index(
+                        selected_winner
+                    )
 
-                phone_number = str(
-                    selected_row["Player's phone number"]
-                ).strip()
+                    selected_row = results.iloc[selected_index]
 
-                phone_number = phone_number.replace("+", "")
+                else:
 
-                if phone_number.startswith("353"):
-                    phone_number = "0" + phone_number[3:]
-                    
-                winner_name = selected_row["Player's name"]
-                st.write(f"**Winner:** {winner_name}")
-                st.write(f"**Phone:** {phone_number}")
-                st.write(f"**Ticket:** {selected_row[ticket_col]}")
+                    selected_row = results.iloc[0]
 
-                jackpot_amount = st.number_input(
-                    "Jackpot Amount (€)",
-                    min_value=0.0,
-                    step=10.0
-                )
+            else:
 
-                if st.button(
-                    "✅ Send Winner For Payment",
-                    type="primary"
-                ):
+                st.warning("No matching record found.")
+
+        # -------------------------------------------------
+        # Payment Submission Section
+        # -------------------------------------------------
+
+        if selected_row is not None:
+
+            phone_number = str(
+                selected_row["Player's phone number"]
+            ).strip()
+
+            phone_number = phone_number.replace("+", "")
+
+            if phone_number.startswith("353"):
+                phone_number = "0" + phone_number[3:]
+
+            winner_name = selected_row["Player's name"]
+
+            st.write(f"**Winner:** {winner_name}")
+            st.write(f"**Phone:** {phone_number}")
+            st.write(f"**Ticket:** {selected_row[ticket_col]}")
+
+            jackpot_amount = st.number_input(
+                "Jackpot Amount (€)",
+                min_value=0.0,
+                step=10.0
+            )
+
+            if st.button(
+                "✅ Send Winner For Payment",
+                type="primary"
+            ):
+
+                if jackpot_amount <= 0:
+
+                    st.error(
+                        "Please enter the jackpot amount before submitting."
+                    )
+
+                else:
 
                     fifty_sheet.append_row([
                         datetime.now().strftime("%d/%m/%Y"),
@@ -346,53 +398,5 @@ with tab2:
                         "Winner sent to Treasurer successfully."
                     )
 
-            else:
-                st.warning(
-                    "No matching player found."
-                )
-
         st.divider()
-                
-
-        # ------------------------------------------
-        # Search by Ticket Number
-        # ------------------------------------------
-
-        search_ticket = st.text_input(
-            "Search by Ticket Number"
-        )
-
-        if search_ticket:
-
-            results = lookup_df[
-                lookup_df[ticket_col]
-                .astype(str)
-                .str.contains(
-                    search_ticket,
-                    na=False
-                )
-            ]
-
-            st.subheader("Ticket Search Results")
-
-            if len(results):
-                st.dataframe(
-                    results,
-                    use_container_width=True
-                )
-            else:
-                st.warning("No matching ticket found.")
-
-        st.divider()
-
-        # ------------------------------------------
-        # Full List
-        # ------------------------------------------
-
-        with st.expander("View Full Player List"):
-
-            st.dataframe(
-                lookup_df,
-                use_container_width=True,
-                height=400
-            )
+        
