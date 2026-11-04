@@ -4,7 +4,10 @@ import streamlit as st
 from st_copy_to_clipboard import st_copy_to_clipboard
 from datetime import datetime
 from google.oauth2.service_account import Credentials
+from google.auth.exceptions import GoogleAuthError
 import gspread
+from gspread.utils import ValueInputOption
+from requests.exceptions import RequestException
 
 # --------------------------------------------------
 # Page Setup
@@ -24,26 +27,23 @@ st.title("🎯 50-50 Draw Manager")
 # 50-50 google sheet
 # --------------------------------------------------
 
-scope = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
+SHEETS_SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
 
 @st.cache_resource
 def get_client():
-
     creds = Credentials.from_service_account_info(
         st.secrets["gcp_service_account"],
-        scopes=scope
+        scopes=SHEETS_SCOPE
     )
 
-    return gspread.authorize(creds)
+    client = gspread.authorize(creds)
+    client.set_timeout((5, 20))
+    return client
 
-client = get_client()
 
-fifty_sheet = client.open_by_key(
-    SHEET_ID
-).worksheet("50-50")
+@st.cache_resource
+def get_fifty_sheet():
+    return get_client().open_by_key(SHEET_ID).worksheet("50-50")
 
 name_col = "Player's name"
 
@@ -385,18 +385,32 @@ with tab2:
 
                 else:
 
-                    fifty_sheet.append_row([
-                        datetime.now().strftime("%d/%m/%Y"),
-                        selected_row["Player's name"],
-                        phone_number,
-                        str(selected_row[ticket_col]),
-                        jackpot_amount,
-                        "Pending"
-                    ])
-
-                    st.success(
-                        "Winner sent to Treasurer successfully."
-                    )
+                    try:
+                        with st.spinner("Sending winner to Treasurer..."):
+                            get_fifty_sheet().append_row(
+                                [
+                                    datetime.now().strftime("%d/%m/%Y"),
+                                    selected_row["Player's name"],
+                                    phone_number,
+                                    str(selected_row[ticket_col]),
+                                    jackpot_amount,
+                                    "Pending"
+                                ],
+                                value_input_option=ValueInputOption.raw,
+                                include_values_in_response=False
+                            )
+                    except KeyError:
+                        st.error(
+                            "Google Sheets credentials are not configured. "
+                            "Add `gcp_service_account` to Streamlit secrets."
+                        )
+                    except (GoogleAuthError, gspread.exceptions.GSpreadException,
+                            RequestException, ValueError) as error:
+                        st.error(f"Could not send winner to Google Sheets: {error}")
+                    else:
+                        st.success(
+                            "Winner sent to Treasurer successfully."
+                        )
 
         st.divider()
         
