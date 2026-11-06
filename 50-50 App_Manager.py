@@ -18,10 +18,8 @@ SHEET_ID = "1umG0zNs4Uz9IqfZXPXEeAgfSWoRTzDDsEwlSRC-3PnM"
 st.set_page_config(
     page_title="50-50 Draw Manager",
     page_icon="🎟️",
-    layout="centered"
+    layout="wide"
 )
-
-st.title("🎯 50-50 Draw Manager")
 
 # --------------------------------------------------
 # 50-50 google sheet
@@ -52,40 +50,215 @@ name_col = "Player's name"
 # --------------------------------------------------
 st.markdown("""
 <style>
+:root {
+    --draw-ink: #19332c;
+    --draw-muted: #64746d;
+    --draw-green: #176b4b;
+    --draw-gold: #e7bd60;
+    --draw-line: #dce5df;
+}
 
-/* Bold tab text */
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse at 10% 0%, rgba(231, 189, 96, 0.12), transparent 32rem),
+        #f5f8f5;
+}
+
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+.block-container {
+    max-width: 1080px;
+    padding: 2rem 2rem 4rem;
+}
+
+.app-hero {
+    position: relative;
+    overflow: hidden;
+    margin: 0 0 1.6rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 22px;
+    color: #fff;
+    background: linear-gradient(120deg, #123f30 0%, #176b4b 65%, #25805a 100%);
+    box-shadow: 0 16px 36px rgba(25, 51, 44, 0.14);
+}
+
+.app-hero::after {
+    position: absolute;
+    top: -5rem;
+    right: -2rem;
+    width: 18rem;
+    height: 18rem;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2rem rgba(255, 255, 255, 0.035),
+                0 0 0 4rem rgba(255, 255, 255, 0.025);
+    content: "";
+}
+
+.hero-kicker {
+    margin-bottom: 0.55rem;
+    color: #f2d995;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.app-hero h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+}
+
+.app-hero p {
+    max-width: 42rem;
+    margin: 0.8rem 0 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
 button[data-baseweb="tab"] p {
     font-weight: 700 !important;
 }
 
-/* Remove custom yellow backgrounds */
-.stTextInput input,
-.stSelectbox div,
-.stTextArea textarea {
-    background-color: inherit !important;
-    color: inherit !important;
+[data-testid="stTabs"] [role="tablist"] {
+    gap: 0.45rem;
+    border-bottom: 1px solid var(--draw-line);
+}
+
+[data-testid="stTabs"] button[role="tab"] {
+    min-height: 3rem;
+    padding: 0.65rem 1rem;
+    border-radius: 10px 10px 0 0;
+    color: var(--draw-muted);
+}
+
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    color: var(--draw-green);
+}
+
+[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
+    background-color: var(--draw-green);
+}
+
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stWidgetLabel"] p {
+    color: var(--draw-ink);
+}
+
+[data-testid="stCaptionContainer"] p {
+    color: var(--draw-muted);
+}
+
+.app-hero p {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+[data-testid="stFileUploader"] section {
+    border: 1px dashed #b8c9be;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    border-color: #cbd8cf;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+[data-testid="stTextArea"] textarea {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    line-height: 1.55;
+}
+
+div.stButton > button,
+[data-testid="stDownloadButton"] button {
+    min-height: 2.75rem;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+div.stButton > button:hover,
+[data-testid="stDownloadButton"] button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(25, 51, 44, 0.12);
+}
+
+div.stButton > button[kind="primary"] {
+    border-color: var(--draw-green);
+    background: var(--draw-green);
+}
+
+[data-testid="stDataFrame"] {
+    overflow: hidden;
+    border: 1px solid var(--draw-line);
+    border-radius: 12px;
+}
+
+.status-card {
+    margin: 0.8rem 0 1.1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #ead9a9;
+    border-left: 5px solid var(--draw-gold);
+    border-radius: 12px;
+    color: #53451f;
+    background: #fffaf0;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .block-container {
+        padding: 1rem 1rem 2.5rem;
+    }
+
+    .app-hero {
+        border-radius: 16px;
+    }
+
+    [data-testid="stTabs"] button[role="tab"] {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.88rem;
+    }
 }
 
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown(
+    """
+    <section class="app-hero">
+        <div class="hero-kicker">Weekly draw · Committee tools</div>
+        <h1>50-50 Draw Manager</h1>
+        <p>Prepare your draw list, find a winning entry, and send prize details
+        to the Treasurer — all in one place.</p>
+    </section>
+    """,
+    unsafe_allow_html=True
+)
+
+
 def show_message(text, icon="✅"):
     st.markdown(
         f"""
-        <div style="
-            background-color:#fff9e6;
-            border-left:5px solid #d4af37;
-            padding:15px;
-            border-radius:10px;
-            color:#5a4a00;
-            font-weight:600;
-            margin:10px 0;
-        ">
+        <div class="status-card">
             {icon} {text}
         </div>
         """,
         unsafe_allow_html=True
     )
+
+
 # --------------------------------------------------
 # Tabs
 # --------------------------------------------------
@@ -100,7 +273,11 @@ tab1, tab2 = st.tabs(
 
 with tab1:
 
-    st.write("Upload a ClubSpot CSV to generate the draw list.")
+    st.subheader("Build this week's draw list")
+    st.caption(
+        "Upload the latest ClubSpot export. You can include enabled auto-renew "
+        "entries only, or add offline entries before generating the list."
+    )
 
     uploaded_file = st.file_uploader(
         "Select ClubSpot CSV",
@@ -200,8 +377,10 @@ with tab1:
 
 with tab2:
 
-    st.write(
-        "Upload any historical ClubSpot draw file and search for player details."
+    st.subheader("Find a winning entry")
+    st.caption(
+        "Upload a historical ClubSpot draw export, then search by player name "
+        "or ticket number to confirm the winner's details."
     )
 
     winner_file = st.file_uploader(
@@ -413,4 +592,3 @@ with tab2:
                         )
 
         st.divider()
-        
