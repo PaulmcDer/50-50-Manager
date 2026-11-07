@@ -53,7 +53,8 @@ st.markdown("""
 :root {
     --draw-ink: #19332c;
     --draw-muted: #64746d;
-    --draw-green: #176b4b;
+    --draw-green: #2d8a63;
+    --draw-green-dark: #236d4d;
     --draw-gold: #e7bd60;
     --draw-line: #dce5df;
 }
@@ -198,6 +199,12 @@ div.stButton > button:hover,
 div.stButton > button[kind="primary"] {
     border-color: var(--draw-green);
     background: var(--draw-green);
+    color: #f5fbf7;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    border-color: var(--draw-green-dark);
+    background: var(--draw-green-dark);
 }
 
 [data-testid="stDataFrame"] {
@@ -240,8 +247,8 @@ st.markdown(
     <section class="app-hero">
         <div class="hero-kicker">Weekly draw · Committee tools</div>
         <h1>50-50 Draw Manager</h1>
-        <p>Prepare your draw list, find a winning entry, and send prize details
-        to the Treasurer — all in one place.</p>
+        <p>Prepare your draw list, find a winning entry, and send the prize
+        details for payment — all in one place.</p>
     </section>
     """,
     unsafe_allow_html=True
@@ -275,8 +282,7 @@ with tab1:
 
     st.subheader("Build this week's draw list")
     st.caption(
-        "Upload the latest ClubSpot export. You can include enabled auto-renew "
-        "entries only, or add offline entries before generating the list."
+        "Upload the latest ClubSpot export to generate the draw list"
     )
 
     uploaded_file = st.file_uploader(
@@ -379,7 +385,7 @@ with tab2:
 
     st.subheader("Find a winning entry")
     st.caption(
-        "Upload a historical ClubSpot draw export, then search by player name "
+        "Upload the ClubSpot draw export, then search by player name "
         "or ticket number to confirm the winner's details."
     )
 
