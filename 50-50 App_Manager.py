@@ -1,4 +1,5 @@
 import csv
+from html import escape
 import pandas as pd
 import streamlit as st
 from st_copy_to_clipboard import st_copy_to_clipboard
@@ -224,6 +225,111 @@ div.stButton > button[kind="primary"]:hover {
     font-weight: 700;
 }
 
+/* Comfortable touch targets in both tablet orientations. */
+[data-testid="stTabs"] [role="tablist"] {
+    gap: 0.5rem;
+    padding: 0.4rem;
+    border: 1px solid var(--draw-line);
+    border-radius: 16px;
+    background: #eaf0eb;
+}
+
+[data-testid="stTabs"] button[role="tab"] {
+    flex: 1;
+    min-height: 56px;
+    border-radius: 12px;
+}
+
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    color: #174e38;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(25, 51, 44, 0.08);
+}
+
+[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+[data-testid="stTabs"] [data-baseweb="tab-border"] {
+    display: none;
+}
+
+[data-testid="stTabs"] [role="tabpanel"] {
+    padding-top: 1.5rem;
+}
+
+[data-testid="stButton"] button,
+[data-testid="stDownloadButton"] button,
+[data-testid="stFileUploader"] button,
+[data-testid="stNumberInput"] button {
+    min-height: 52px;
+    touch-action: manipulation;
+}
+
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    min-height: 52px;
+    font-size: 1rem;
+}
+
+[data-testid="stCheckbox"] label,
+[data-testid="stRadio"] label {
+    min-height: 48px;
+    align-items: center;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] > div {
+    border-radius: 16px;
+}
+
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid #a47720 !important;
+    outline-offset: 3px;
+}
+
+.winner-card {
+    padding: 1.25rem;
+    margin: 0.5rem 0 1rem;
+    background: #edf5ef;
+    border: 1px solid #c8dece;
+    border-radius: 16px;
+}
+
+.winner-card .winner-label {
+    color: #41634e;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.winner-card h3 {
+    padding: 0.35rem 0 0.65rem;
+    margin: 0;
+    color: #19332c;
+    overflow-wrap: anywhere;
+}
+
+.winner-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    color: #19332c;
+    overflow-wrap: anywhere;
+}
+
+@media (pointer: coarse) {
+    [data-testid="stNumberInput"] button {
+        min-width: 48px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    div.stButton > button,
+    [data-testid="stDownloadButton"] button {
+        transition: none;
+        transform: none !important;
+    }
+}
+
 @media (max-width: 640px) {
     .block-container {
         padding: 1rem 1rem 2.5rem;
@@ -280,7 +386,7 @@ tab1, tab2 = st.tabs(
 
 with tab1:
 
-    st.subheader("Build this week's draw list")
+    st.subheader("1. Prepare your draw")
     st.caption(
         "Upload the latest ClubSpot export to generate the draw list"
     )
@@ -343,7 +449,7 @@ with tab1:
                 step=1
             )
 
-        if st.button("Generate Draw List"):
+        if st.button("Generate Draw List", type="primary", width="stretch"):
 
             for i in range(1, num_offline + 1):
                 draw_entries.append(f"Offline Entry {i}")
@@ -353,6 +459,7 @@ with tab1:
 
     if "draw_list" in st.session_state:
 
+        st.subheader("2. Copy or download")
         show_message(
             f"Total Entries: {st.session_state['entry_count']}",
             "📊"
@@ -374,7 +481,8 @@ with tab1:
             label="📥 Download Draw List",
             data=st.session_state["draw_list"],
             file_name="draw_list.txt",
-            mime="text/plain"
+            mime="text/plain",
+            width="stretch"
         )
 
 # ==================================================
@@ -383,7 +491,7 @@ with tab1:
 
 with tab2:
 
-    st.subheader("Find a winning entry")
+    st.subheader("1. Load your draw entries")
     st.caption(
         "Upload the ClubSpot draw export, then search by player name "
         "or ticket number to confirm the winner's details."
@@ -454,7 +562,7 @@ with tab2:
         # Winner Payment Submission
         # ------------------------------------------
 
-        st.subheader("🏆 Submit Winner for Payment")
+        st.subheader("2. Find the winning entry")
 
         search_type = st.radio(
             "Search By",
@@ -463,7 +571,8 @@ with tab2:
         )
 
         search_value = st.text_input(
-            f"Search by {search_type}"
+            f"Search by {search_type}",
+            placeholder="Enter a player name" if search_type == "Name" else "Enter a ticket number"
         )
 
         selected_row = None
@@ -500,7 +609,8 @@ with tab2:
 
                 st.dataframe(
                     results,
-                    use_container_width=True
+                    width="stretch",
+                    row_height=48
                 )
 
                 # Multiple matches
@@ -547,9 +657,18 @@ with tab2:
 
             winner_name = selected_row["Player's name"]
 
-            st.write(f"**Winner:** {winner_name}")
-            st.write(f"**Phone:** {phone_number}")
-            st.write(f"**Ticket:** {selected_row[ticket_col]}")
+            st.subheader("3. Send for payment")
+            st.markdown(
+                f"""<section class="winner-card">
+                    <div class="winner-label">Selected winner</div>
+                    <h3>{escape(str(winner_name))}</h3>
+                    <div class="winner-details">
+                        <span><strong>Phone</strong><br>{escape(phone_number)}</span>
+                        <span><strong>Ticket</strong><br>{escape(str(selected_row[ticket_col]))}</span>
+                    </div>
+                </section>""",
+                unsafe_allow_html=True
+            )
 
             jackpot_amount = st.number_input(
                 "Jackpot Amount (€)",
@@ -559,7 +678,8 @@ with tab2:
 
             if st.button(
                 "✅ Send Winner For Payment",
-                type="primary"
+                type="primary",
+                width="stretch"
             ):
 
                 if jackpot_amount <= 0:
